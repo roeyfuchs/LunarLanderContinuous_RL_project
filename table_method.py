@@ -1,28 +1,58 @@
-import bisect  # for using to discrete values
 import random
 
 import numpy as np
 
 from plot_creator import Plot
 
-# discrete_range = np.arange(-1.0, 1.0, 0.2)
-discrete_range = [-1, -0.8, -0.6, 0, 0.6, 0.8, 1]
-table_indexs = {discrete_range[x]: x for x in range(len(discrete_range))}
-n = len(discrete_range)
-numer_of_features = 8
+# discrete values for states
+x_discrete = np.arange(-0.2, 0.2, 0.1)
+y_discrete = np.concatenate((np.arange(0, 1.1, 0.3), [-0.01]))
+x_velocity_discrete = np.arange(-0.5, 0.5, 0.25)
+y_velocity_discrete = np.arange(-0.8, 0.2, 0.25)
+angle_discrete = np.arange(-0.3, 0.3, 0.15)
+angular_velocity_discrete = np.arange(-0.3, 0.3, 0.15)
+left_leg = np.array([0, 1])
+right_leg = np.array([0, 1])
+values_table = np.array(
+    [
+        x_discrete,
+        y_discrete,
+        x_velocity_discrete,
+        y_velocity_discrete,
+        angle_discrete,
+        angular_velocity_discrete,
+        left_leg,
+        right_leg,
+    ],
+    dtype=object,
+)
 
-discrete_actions = [(x, y) for x in discrete_range for y in discrete_range]
+# discrete values for action
+# main_engine_values = [0, 0.2, 0.8, 1]
+main_engine_values = [0, 1]
+# sec_engine_values = [0, -1, -0.6, 0.6, 1]
+sec_engine_values = [0, -1, 1]
+discrete_actions = [(x, y) for x in main_engine_values for y in sec_engine_values]
 action_index = {discrete_actions[x]: x for x in range(len(discrete_actions))}
 
-alpha = 0.8
-gamma = 0.1
-epsilon = 0.05  # for epsilon-greedy
+alpha = 0.3
+gamma = 0.99
+epsilon = 0.1  # for epsilon-greedy
 
 
 class table_method:
     def __init__(self):
-        array_shape = [n] * (numer_of_features - 2)
-        array_shape.extend([2, 2])  # for 0 1 values
+        array_shape = [
+            len(x_discrete),
+            len(y_discrete),
+            len(x_velocity_discrete),
+            len(y_velocity_discrete),
+            len(angle_discrete),
+            len(angular_velocity_discrete),
+            len(left_leg),
+            len(right_leg),
+        ]
+        print(array_shape)
         array_shape.extend([len(discrete_actions)])  # |S| * |A|
         self.Q = np.zeros(array_shape)
 
@@ -42,9 +72,8 @@ class table_method:
 
     def discrete_obs(self, obs):
         new_obs = []
-        for i in obs:
-            new_obs.extend([bisect.bisect_left(discrete_range, i) - 1])
-        new_obs[-2:] = obs[-2:].astype(int)  # 0 or 1
+        for i in np.abs(obs - values_table):
+            new_obs.append(np.argmin(i))
         return new_obs
 
     def train(self, env):
@@ -64,10 +93,13 @@ class table_method:
             q1_indx = get_indexes(state, action)
             q2_indx = get_indexes(state2, action2)
             predict = self.Q[q1_indx]
-            target = reward + gamma * self.Q[q2_indx]
-            self.Q[q1_indx] = self.Q[q2_indx] + alpha * (target - predict)
+            target = self.Q[q2_indx]
+            self.Q[q1_indx] = self.Q[q1_indx] + alpha * (
+                reward + gamma * target - predict
+            )
 
         total_episodes = 500
+        reward_array = []
         plot = Plot(f"SARSA, alpha = {alpha}, gamma = {gamma}", "episode #", "rewards")
         for episode in range(total_episodes):
             print(f"episode #{episode}")
@@ -87,4 +119,6 @@ class table_method:
                 action1 = action2
             plot.add_point(episode, episode_reward)
             print(episode_reward)
+            reward_array.append(episode_reward)
+        print(f"Avg. reawrd: {np.mean(reward_array)}")
         input()
