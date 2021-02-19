@@ -12,7 +12,7 @@ FILE_SAVEING_TYPE = "png"
 
 class Plot:
     def __init__(self, title, xlabel, ylabel, verbose=True):
-        self.fig = plt.figure(5)
+        self.fig = plt.figure()
         self.line = plt.plot([], [])[0]
         plt.title(title)
         plt.xlabel(xlabel)
@@ -38,4 +38,4 @@ class Plot:
         if not filename:
             filename = time.strftime("%H-%M-%S", time.localtime())
         file_path = os.path.join(BASE_SAVEING_PATH, filename)
-        plt.savefig(".".join([file_path, FILE_SAVEING_TYPE]))
+        self.fig.savefig(".".join([file_path, FILE_SAVEING_TYPE]))
