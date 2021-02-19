@@ -38,7 +38,8 @@ action_index = {discrete_actions[x]: x for x in range(len(discrete_actions))}
 
 default_alpha = 0.3
 default_gamma = 0.99
-epsilon = 0.1  # for epsilon-greedy
+epsilon = [0.4, 0.2, 0.1, 0.05, 0.01, 0]  # for epsilon-greedy
+epsilon_bins = [0, 30, 60, 80, 90, 110, 150]
 
 BASE_PATH_Q_SAVING = os.path.join("SARSA", "Q")
 BASE_PATH_REWARD = os.path.join("SARSA", "reward")
@@ -47,7 +48,14 @@ os.makedirs(BASE_PATH_REWARD, exist_ok=True)  # make sure we have directoris to 
 
 
 class table_method:
-    def __init__(self, alpha=default_alpha, gamma=default_gamma, save=False, load=None):
+    def __init__(
+        self,
+        alpha=default_alpha,
+        gamma=default_gamma,
+        save=False,
+        load=None,
+        render=True,
+    ):
         array_shape = [
             len(x_discrete),
             len(y_discrete),
@@ -66,20 +74,27 @@ class table_method:
         self.alpha = alpha
         self.gamma = gamma
         self.save = save
-        print(self.Q)
+        self.render = render
 
-    def get_action(self, state):
-        def get_best_action_index(self, state):
+    def get_action(self, state, it):
+        def get_best_action_index(self, state, it):
             """ epsilon-greedy """
+
+            def get_prob_by_iteration(it):
+                for i in range(len(epsilon_bins) - 1):
+                    if it >= epsilon_bins[i] and it < epsilon_bins[i + 1]:
+                        return epsilon[i]
+                return epsilon[-1]
+
             p = random.random()
             state = tuple(state)
-            if p < epsilon:
+            if p < get_prob_by_iteration(it):
                 return random.randrange(len(self.Q[state]))
             else:
                 return np.argmax(self.Q[state])
 
         state = self.discrete_obs(state)
-        action_index = get_best_action_index(self, state)
+        action_index = get_best_action_index(self, state, it)
         return discrete_actions[action_index]
 
     def discrete_obs(self, obs):
@@ -110,7 +125,7 @@ class table_method:
                 reward + self.gamma * target - predict
             )
 
-        total_episodes = 50
+        total_episodes = 500
         reward_array = []
         plot = Plot(
             f"SARSA, alpha = {self.alpha}, gamma = {self.gamma}", "episode #", "rewards"
@@ -119,14 +134,15 @@ class table_method:
             print(f"episode #{episode}")
             episode_reward = 0
             state1 = env.reset()
-            action1 = self.get_action(state1)
+            action1 = self.get_action(state1, episode)
 
             done = False
             while not done:
-                env.render()
+                if self.render:
+                    env.render()
                 state2, reward, done, info = env.step(action1)
                 episode_reward += reward
-                action2 = self.get_action(state2)
+                action2 = self.get_action(state2, episode)
 
                 update(state1, state2, reward, action1, action2)
                 state1 = state2
