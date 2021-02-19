@@ -1,5 +1,13 @@
+import os
+import time
+
 import matplotlib.pyplot as plt
-import numpy as np
+
+BASE_SAVEING_PATH = "graphs"
+os.makedirs(
+    BASE_SAVEING_PATH, exist_ok=True
+)  # make sure that we have a directory to save
+FILE_SAVEING_TYPE = "png"
 
 
 class Plot:
@@ -24,3 +32,9 @@ class Plot:
         self.ax.autoscale_view()
         plt.draw()
         self.fig.canvas.flush_events()
+
+    def save(self, filename=None):
+        if not filename:
+            filename = time.strftime("%H-%M-%S", time.localtime())
+        file_path = os.path.join(BASE_SAVEING_PATH, filename)
+        plt.savefig(".".join([file_path, FILE_SAVEING_TYPE]))
