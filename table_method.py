@@ -103,7 +103,7 @@ class table_method:
             new_obs.append(np.argmin(i))
         return new_obs
 
-    def train(self, env):
+    def play(self, env):
         def update(state, state2, reward, action, action2):
             """ by example https://www.geeksforgeeks.org/sarsa-reinforcement-learning/ """
 
