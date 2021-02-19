@@ -1,3 +1,4 @@
+import os
 import random
 
 import numpy as np
@@ -39,9 +40,14 @@ default_alpha = 0.3
 default_gamma = 0.99
 epsilon = 0.1  # for epsilon-greedy
 
+BASE_PATH_Q_SAVING = os.path.join("SARSA", "Q")
+BASE_PATH_REWARD = os.path.join("SARSA", "reward")
+os.makedirs(BASE_PATH_Q_SAVING, exist_ok=True)
+os.makedirs(BASE_PATH_REWARD, exist_ok=True)  # make sure we have directoris to save
+
 
 class table_method:
-    def __init__(self, alpha=default_alpha, gamma=default_gamma):
+    def __init__(self, alpha=default_alpha, gamma=default_gamma, save=False, load=None):
         array_shape = [
             len(x_discrete),
             len(y_discrete),
@@ -53,9 +59,14 @@ class table_method:
             len(right_leg),
         ]
         array_shape.extend([len(discrete_actions)])  # |S| * |A|
-        self.Q = np.zeros(array_shape)
+        if load:
+            self.Q = np.load(load)
+        else:
+            self.Q = np.zeros(array_shape)
         self.alpha = alpha
         self.gamma = gamma
+        self.save = save
+        print(self.Q)
 
     def get_action(self, state):
         def get_best_action_index(self, state):
@@ -99,7 +110,7 @@ class table_method:
                 reward + self.gamma * target - predict
             )
 
-        total_episodes = 500
+        total_episodes = 50
         reward_array = []
         plot = Plot(
             f"SARSA, alpha = {self.alpha}, gamma = {self.gamma}", "episode #", "rewards"
@@ -124,4 +135,8 @@ class table_method:
             print(episode_reward)
             reward_array.append(episode_reward)
         print(f"Avg. reawrd: {np.mean(reward_array)}")
-        input()
+        if self.save:
+            file_name = "-".join([str(self.alpha), str(self.gamma)])
+            plot.save(file_name)
+            np.save(os.path.join(BASE_PATH_Q_SAVING, file_name), self.Q)
+            np.save(os.path.join(BASE_PATH_REWARD, file_name), reward_array)
