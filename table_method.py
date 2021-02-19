@@ -35,13 +35,13 @@ sec_engine_values = [0, -1, 1]
 discrete_actions = [(x, y) for x in main_engine_values for y in sec_engine_values]
 action_index = {discrete_actions[x]: x for x in range(len(discrete_actions))}
 
-alpha = 0.3
-gamma = 0.99
+default_alpha = 0.3
+default_gamma = 0.99
 epsilon = 0.1  # for epsilon-greedy
 
 
 class table_method:
-    def __init__(self):
+    def __init__(self, alpha=default_alpha, gamma=default_gamma):
         array_shape = [
             len(x_discrete),
             len(y_discrete),
@@ -52,9 +52,10 @@ class table_method:
             len(left_leg),
             len(right_leg),
         ]
-        print(array_shape)
         array_shape.extend([len(discrete_actions)])  # |S| * |A|
         self.Q = np.zeros(array_shape)
+        self.alpha = alpha
+        self.gamma = gamma
 
     def get_action(self, state):
         def get_best_action_index(self, state):
@@ -94,13 +95,15 @@ class table_method:
             q2_indx = get_indexes(state2, action2)
             predict = self.Q[q1_indx]
             target = self.Q[q2_indx]
-            self.Q[q1_indx] = self.Q[q1_indx] + alpha * (
-                reward + gamma * target - predict
+            self.Q[q1_indx] = self.Q[q1_indx] + self.alpha * (
+                reward + self.gamma * target - predict
             )
 
         total_episodes = 500
         reward_array = []
-        plot = Plot(f"SARSA, alpha = {alpha}, gamma = {gamma}", "episode #", "rewards")
+        plot = Plot(
+            f"SARSA, alpha = {self.alpha}, gamma = {self.gamma}", "episode #", "rewards"
+        )
         for episode in range(total_episodes):
             print(f"episode #{episode}")
             episode_reward = 0
