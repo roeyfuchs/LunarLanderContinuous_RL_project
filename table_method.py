@@ -55,6 +55,7 @@ class table_method:
         save=False,
         load=None,
         render=True,
+        verbose=True,
     ):
         array_shape = [
             len(x_discrete),
@@ -75,6 +76,7 @@ class table_method:
         self.gamma = gamma
         self.save = save
         self.render = render
+        self.verbose = verbose
 
     def get_action(self, state, it):
         def get_best_action_index(self, state, it):
@@ -128,10 +130,14 @@ class table_method:
         total_episodes = 500
         reward_array = []
         plot = Plot(
-            f"SARSA, alpha = {self.alpha}, gamma = {self.gamma}", "episode #", "rewards"
+            f"SARSA, alpha = {self.alpha}, gamma = {self.gamma}",
+            "episode #",
+            "rewards",
+            verbose=self.verbose,
         )
         for episode in range(total_episodes):
-            print(f"episode #{episode}")
+            if self.verbose:
+                print(f"episode #{episode}")
             episode_reward = 0
             state1 = env.reset()
             action1 = self.get_action(state1, episode)
@@ -148,9 +154,11 @@ class table_method:
                 state1 = state2
                 action1 = action2
             plot.add_point(episode, episode_reward)
-            print(episode_reward)
+            if self.verbose:
+                print(episode_reward)
             reward_array.append(episode_reward)
-        print(f"Avg. reawrd: {np.mean(reward_array)}")
+        if self.verbose:
+            print(f"Avg. reawrd: {np.mean(reward_array)}")
         if self.save:
             file_name = "-".join([str(self.alpha), str(self.gamma)])
             plot.save(file_name)

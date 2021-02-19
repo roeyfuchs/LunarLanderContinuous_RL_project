@@ -11,7 +11,7 @@ FILE_SAVEING_TYPE = "png"
 
 
 class Plot:
-    def __init__(self, title, xlabel, ylabel):
+    def __init__(self, title, xlabel, ylabel, verbose=True):
         self.fig = plt.figure(5)
         self.line = plt.plot([], [])[0]
         plt.title(title)
@@ -21,7 +21,8 @@ class Plot:
         self.y = []
         self.ax = self.fig.get_children()[1]
 
-        plt.show(block=False)
+        if verbose:
+            plt.show(block=False)
 
     def add_point(self, xP, yP):
         self.x.append(xP)
