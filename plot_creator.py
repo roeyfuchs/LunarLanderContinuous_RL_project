@@ -2,6 +2,7 @@ import os
 import time
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 BASE_SAVEING_PATH = "graphs"
 os.makedirs(
@@ -11,7 +12,7 @@ FILE_SAVEING_TYPE = "png"
 
 
 class Plot:
-    def __init__(self, title, xlabel, ylabel, verbose=True):
+    def __init__(self, title, xlabel, ylabel, verbose=True, win=1):
         self.fig = plt.figure()
         self.line = plt.plot([], [])[0]
         plt.title(title)
@@ -19,7 +20,10 @@ class Plot:
         plt.ylabel(ylabel)
         self.x = []
         self.y = []
+        self.xmean = []
+        self.ymean = []
         self.ax = self.fig.get_children()[1]
+        self.win = win
 
         if verbose:
             plt.show(block=False)
@@ -27,8 +31,16 @@ class Plot:
     def add_point(self, xP, yP):
         self.x.append(xP)
         self.y.append(yP)
-        self.line.set_xdata(self.x)
-        self.line.set_ydata(self.y)
+        if len(self.xmean) > 0 or len(self.x) == self.win:
+            if len(self.xmean) > 0:
+                i = self.xmean[-1] + 1
+            else:
+                i = self.win
+            self.xmean.append(i)
+            self.ymean.append(np.mean(self.y[i - self.win : i]))
+
+        self.line.set_xdata(self.xmean)
+        self.line.set_ydata(self.ymean)
         self.ax.relim()
         self.ax.autoscale_view()
         plt.draw()
