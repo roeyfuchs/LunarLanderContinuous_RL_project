@@ -6,12 +6,12 @@ import numpy as np
 from plot_creator import Plot
 
 # discrete values for states
-x_discrete = np.arange(-0.2, 0.2, 0.1)
-y_discrete = np.concatenate((np.arange(0, 1.1, 0.3), [-0.01]))
-x_velocity_discrete = np.arange(-0.5, 0.5, 0.25)
-y_velocity_discrete = np.arange(-0.8, 0.2, 0.25)
-angle_discrete = np.arange(-0.3, 0.3, 0.15)
-angular_velocity_discrete = np.arange(-0.3, 0.3, 0.15)
+x_discrete = np.linspace(-0.2, 0.2, 9)
+y_discrete = np.concatenate((np.linspace(0, 1.1, 9), [-0.01]))
+x_velocity_discrete = np.linspace(-0.3, 0.3, 6)
+y_velocity_discrete = np.linspace(-0.5, 0.1, 10)
+angle_discrete = np.linspace(-0.3, 0.3, 8)
+angular_velocity_discrete = np.linspace(-0.2, 0.2, 6)
 left_leg = np.array([0, 1])
 right_leg = np.array([0, 1])
 values_table = np.array(
@@ -28,18 +28,17 @@ values_table = np.array(
     dtype=object,
 )
 
+
 # discrete values for action
-# main_engine_values = [0, 0.2, 0.8, 1]
-main_engine_values = [0, 1]
-# sec_engine_values = [0, -1, -0.6, 0.6, 1]
-sec_engine_values = [0, -1, 1]
+main_engine_values = [0, 0.1, 0.9, 1]
+sec_engine_values = [0, -1, -0.9, 0.9, 1]
 discrete_actions = [(x, y) for x in main_engine_values for y in sec_engine_values]
 action_index = {discrete_actions[x]: x for x in range(len(discrete_actions))}
 
 default_alpha = 0.3
 default_gamma = 0.99
-epsilon = [0.4, 0.2, 0.1, 0.05, 0.01, 0]  # for epsilon-greedy
-epsilon_bins = [0, 30, 60, 80, 90, 110, 150]
+epsilon = [0.3, 0.2, 0.1, 0.05, 0.01, 0]  # for epsilon-greedy
+epsilon_bins = [0, 150, 300, 500, 1000, 1250, 3000]
 
 BASE_PATH_Q_SAVING = os.path.join("SARSA", "Q")
 BASE_PATH_REWARD = os.path.join("SARSA", "reward")
@@ -67,6 +66,7 @@ class table_method:
             len(left_leg),
             len(right_leg),
         ]
+        print(array_shape)
         array_shape.extend([len(discrete_actions)])  # |S| * |A|
         if load:
             self.Q = np.load(load)
@@ -106,7 +106,7 @@ class table_method:
         return new_obs
 
     def play(self, env):
-        def update(state, state2, reward, action, action2):
+        def update(state, state2, reward, action, action2, done):
             """ by example https://www.geeksforgeeks.org/sarsa-reinforcement-learning/ """
 
             def get_indexes(state, action):
@@ -123,17 +123,18 @@ class table_method:
             q2_indx = get_indexes(state2, action2)
             predict = self.Q[q1_indx]
             target = self.Q[q2_indx]
-            self.Q[q1_indx] = self.Q[q1_indx] + self.alpha * (
-                reward + self.gamma * target - predict
-            )
+            if done:
+                target = 0
+            self.Q[q1_indx] += self.alpha * (reward + self.gamma * target - predict)
 
-        total_episodes = 500
+        total_episodes = 50000
         reward_array = []
         plot = Plot(
             f"SARSA, alpha = {self.alpha}, gamma = {self.gamma}",
             "episode #",
             "rewards",
             verbose=self.verbose,
+            win=100,
         )
         for episode in range(total_episodes):
             if self.verbose:
@@ -150,7 +151,7 @@ class table_method:
                 episode_reward += reward
                 action2 = self.get_action(state2, episode)
 
-                update(state1, state2, reward, action1, action2)
+                update(state1, state2, reward, action1, action2, done)
                 state1 = state2
                 action1 = action2
             plot.add_point(episode, episode_reward)
