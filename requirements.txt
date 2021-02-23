@@ -1,5 +1,7 @@
 gym
 gym[box2d]
-tensorflow
+#tensorflow
 numpy
 matplotlib
+tensorflow
+keras
