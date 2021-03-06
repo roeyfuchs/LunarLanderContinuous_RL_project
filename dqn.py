@@ -14,7 +14,7 @@ env.seed(0)
 np.random.seed(0)
 
 
-main_engine_values = [0, 1]
+main_engine_values = [0, 0.5, 1]
 sec_engine_values = [-1, 0, 1]
 discrete_actions = [(x, y) for x in main_engine_values for y in sec_engine_values]
 
@@ -48,9 +48,6 @@ class DQN:
         self.memory.append((state, action, reward, next_state, done))
 
     def choose_action(self, state):
-
-        #self.epsilon *= self.epsilon_decay
-
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_space)
         act_values = self.model.predict(state)
