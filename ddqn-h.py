@@ -72,7 +72,7 @@ class Store_samples(object):
 
 
 class Agent(object):
-    def __init__(self, state_size, action_size, DDQN=True):
+    def __init__(self, state_size, action_size, DDQN=False):
         self.input_size = state_size
         self.output_size = action_size
         self.storage = Store_samples()
