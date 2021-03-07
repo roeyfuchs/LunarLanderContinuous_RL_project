@@ -198,7 +198,7 @@ class Solve_Lunar_Lander(object):
             verbose=self.verbose,
             win=100,
         )
-        MAX_timesteps = 600
+        MAX_timesteps = 3000
 
         for i in range(self.num_episodes):
             m_cur_state = env.reset()
