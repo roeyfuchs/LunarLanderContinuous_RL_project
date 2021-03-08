@@ -13,7 +13,11 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import *
 
 from plot_creator import Plot
-
+import heapq
+import math
+from itertools import count
+tie_breaker1 = count()
+tie_breaker2 = count()
 seed = 42
 
 # discrete values for action
@@ -23,7 +27,7 @@ main_engine_values = [
     1,
 ]
 main_engine_values.sort()
-sec_engine_values = [0, -0.6, 0.6, 1, -1]
+sec_engine_values = [0, -0.75, 0.75, 1, -1]
 sec_engine_values.sort()
 discrete_actions = [(x, y) for x in main_engine_values for y in sec_engine_values]
 action_index = {discrete_actions[x]: x for x in range(len(discrete_actions))}
@@ -34,6 +38,7 @@ action_index = {discrete_actions[x]: x for x in range(len(discrete_actions))}
 class Store_samples(object):
     def __init__(self):
         self.max_size = 50000
+        self.hisheap = []
         self.s_t = deque([None] * (self.max_size + 1))
         self.s_a = deque([None] * (self.max_size + 1))
         self.s_r = deque([None] * (self.max_size + 1))
@@ -42,24 +47,37 @@ class Store_samples(object):
         self.size = 0
         self.pos = 0
 
-    def add_sample(self, s_t, s_a, s_r, s_t1, done):
-        self.s_t[self.pos] = s_t
-        self.s_a[self.pos] = s_a
-        self.s_r[self.pos] = s_r
-        self.s_t1[self.pos] = s_t1
-        self.done[self.pos] = done
-        if self.pos == self.max_size:
-            self.pos = 0
-        else:
-            self.pos += 1
+    def from_arr_to_tuple(self, e):
+        return (e[5],next(tie_breaker1), next(tie_breaker2), e[0], e[1], e[2],e[3], e[4]) # e[5] is the loss
 
-        if self.size != self.max_size:
-            self.size += 1
+    def add_sample(self, e):
+        ea = self.from_arr_to_tuple(e)
+        heapq.heappush(self.hisheap, ea)
+        self.size += 1
 
     def get_curr_size(self):
         return self.size
 
     def get_rand_samples(self, num_samples):
+        eis = []
+        for i in range(num_samples):
+            eis.append(heapq.heappop(self.hisheap))
+        m_s_t = []
+        m_s_a = []
+        m_s_r = []
+        m_s_t1 = []
+        m_done = []
+        for e in eis:
+            heapq.heappush(self.hisheap, e)
+            m_s_t.append(e[3])
+            m_s_a.append(e[4])
+            m_s_r.append(e[5])
+            m_s_t1.append(e[6])
+            m_done.append(e[7])
+        return (m_s_t, m_s_a, m_s_r, m_s_t1, m_done)
+        
+        
+
         m_size = self.get_curr_size()
         m_count = num_samples
         m_index = random.sample(range(m_size - 1), num_samples)
@@ -100,14 +118,14 @@ class Agent(object):
         model.add(Dense(64))
         model.add(Activation("relu"))
         model.add(Dense(self.output_size))
-        model.add(Activation("softmax"))
+        model.add(Activation("linear"))
         m_opt = Adam(lr=0.00025, decay=0.0)
         model.compile(optimizer=m_opt, loss="mse")
         model.summary()
         return model
 
-    def update_experience(self, m_s, m_a, m_r, m_st, m_done):
-        self.storage.add_sample(m_s, m_a, m_r, m_st, m_done)
+    def update_experience(self, e):
+        self.storage.add_sample(e)
 
     def copy_action_to_target(self, m_num_steps):
         if m_num_steps % self.m_target_model_update == 0:
@@ -117,7 +135,6 @@ class Agent(object):
     def upd_epsilon(self, num_episodes):
         self.epsilon = self.epsilon * self.decay
 
-    # Hari: FIX ME : Update this to Double DQN
     def get_action(self, state, num_episodes, test_mode):
         # Only do random till num_episodes = m_epsilon_update
         if test_mode:
@@ -163,9 +180,11 @@ class Agent(object):
                         m_Q[i, np.argmax(m_best_action_DDQN[i])]
                     )
                 m_y[i, m_a[i]] = m_test_res
-        self.action_model.fit(
+        hist = self.action_model.fit(
             m_in_s, m_y, batch_size=self.batch_size, epochs=1, verbose=False
         )
+        return hist.history["loss"][0]
+        
 
 
 class Solve_Lunar_Lander(object):
@@ -198,7 +217,6 @@ class Solve_Lunar_Lander(object):
             verbose=self.verbose,
             win=100,
         )
-        MAX_timesteps = 600
 
         for i in range(self.num_episodes):
             m_cur_state = env.reset()
@@ -222,17 +240,17 @@ class Solve_Lunar_Lander(object):
                 # self.agent.run_agent()
                 if not self.test_mode:
                     m_clipped_rew = reward / 1.0
+                    loss = self.agent.run_agent()
+                    if loss is None:
+                        loss = -math.inf
+                    else:
+                        loss += 0.00000001 # epsilon
                     self.agent.update_experience(
-                        m_cur_state, action, m_clipped_rew, next_state, done
-                    )
-                    self.agent.run_agent()
+                        [m_cur_state, action, m_clipped_rew, next_state, done, -loss]
+                    ) #-loss beacuse we work with minimum heap
                     self.agent.copy_action_to_target(self.num_steps)
                 # print(t, reward, next_state)
                 m_cur_state = next_state
-                if t == MAX_timesteps:
-                    reward = -100
-                    self.total_reward += reward
-                    done = True
                 if done:
                     print(
                         "Episode {} finished after {} timesteps with reward {} last reward {}".format(
