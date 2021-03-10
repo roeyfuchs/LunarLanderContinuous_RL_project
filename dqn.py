@@ -15,7 +15,7 @@ np.random.seed(0)
 
 
 main_engine_values = [0, 0.5, 1]
-sec_engine_values = [-1, 0, 1]
+sec_engine_values = [-1, -0.75, 0, 0.75, 1]
 discrete_actions = [(x, y) for x in main_engine_values for y in sec_engine_values]
 
 class DQN:
@@ -30,7 +30,7 @@ class DQN:
         self.gamma = .99
         self.batch_size = 64
         self.epsilon_min = .01
-        self.lr = 0.001
+        self.lr = 0.0005
         self.epsilon_decay = .996
         self.memory = deque(maxlen=1000000)
         self.model = self.build_model()
@@ -41,7 +41,7 @@ class DQN:
         model.add(Dense(150, input_dim=self.state_space, activation=relu))
         model.add(Dense(120, activation=relu))
         model.add(Dense(self.action_space, activation=linear))
-        model.compile(loss='huber', optimizer=Adam(lr=self.lr))
+        model.compile(loss='mse', optimizer=Adam(lr=self.lr))
         return model
 
     def remember(self, state, action, reward, next_state, done):
@@ -80,7 +80,7 @@ class DQN:
 
 def train_dqn(episode):
 
-    loss = []
+    scores = []
     agent = DQN(len(discrete_actions), env.observation_space.shape[0])
     for e in range(episode):
         state = env.reset()
@@ -99,19 +99,22 @@ def train_dqn(episode):
             if done:
                 print("episode: {}/{}, score: {}".format(e, episode, score))
                 break
-        loss.append(score)
+        scores.append(score)
 
         # Average score of last 100 episode
-        is_solved = np.mean(loss[-100:])
+        is_solved = np.mean(scores[-100:])
         if is_solved > 200:
             print('\n Task Completed! \n')
             break
-        print("Average over last 100 episode: {0:.2f} \n".format(is_solved))
-    return loss
+        print("Average score over last 100 episode: {0:.2f} \n".format(is_solved))
+    return scores, agent.lr, agent.batch_size
 
 
 if __name__ == '__main__':
-    episodes = 400
-    loss = train_dqn(episodes)
-    plt.plot([i+1 for i in range(0, len(loss), 2)], loss[::2])
+    episodes = 800
+    scores, lr, batch_size = train_dqn(episodes)
+    plt.plot([i+1 for i in range(0, len(scores), 2)], scores[::2])
+    plt.title(f"DQN, learning_rate = {lr}, batch_size = {batch_size}",)
+    plt.xlabel("Number Episode")
+    plt.ylabel("Score Per Episode")
     plt.show()
