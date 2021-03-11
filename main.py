@@ -1,20 +1,19 @@
-import os
-
-os.environ["LANG"] = "en_US"
 import gym
+import matplotlib.pyplot as plt
+from dqn_basic import DQN_BASIC
+from dqn_epsilon_greedy import DQN_EPSILON_GREEDY
+import numpy as np
 
-import table_method
 
-env = gym.make("LunarLanderContinuous-v2")
-alphas = [0.35, 0.7, 0.9, 1]
-gammas = [0, 0.35, 0.7, 0.9, 0.99]
+if __name__ == '__main__':
+    env = gym.make("LunarLanderContinuous-v2")
+    env.seed(0)
+    np.random.seed(0)
 
-for alpha in alphas:
-    for gamma in gammas:
-        print(alpha, gamma)
-        agent = table_method.table_method(
-            alpha=alpha, gamma=gamma, render=False, save=True, verbose=False
-        )
-        agent.play(env)
+    agent = DQN_EPSILON_GREEDY(env.observation_space.shape[0])
+    scores, lr, batch_size = agent.solve_game(env)
 
-env.close()
+    plt.plot([i + 1 for i in range(0, len(scores), 2)], scores[::2])
+    plt.xlabel("Number Episode")
+    plt.ylabel("Score Per Episode")
+    plt.show()
