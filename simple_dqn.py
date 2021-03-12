@@ -1,4 +1,3 @@
-import random
 from keras import Sequential
 from collections import deque
 from keras.layers import Dense
@@ -6,6 +5,7 @@ from keras.optimizers import Adam
 from keras.activations import relu, linear
 import numpy as np
 import utils
+import random
 
 
 class SimpleDQN:
