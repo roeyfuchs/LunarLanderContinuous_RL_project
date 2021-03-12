@@ -9,7 +9,7 @@ import random
 
 
 class DQNEpsilonGreedy:
-    """ Implementation of deep q learning algorithm with replay memory"""
+    """ Implementation of deep q learning algorithm with replay memory and epsilon greedy"""
 
     def __init__(self, state_space):
         self.action_space = len(utils.discrete_actions)
@@ -32,6 +32,8 @@ class DQNEpsilonGreedy:
         self.replay_memory.append((state, action, reward, next_state, done))
 
     def select_action(self, state):
+        if np.random.rand() <= self.epsilon:
+            return random.randrange(self.action_space)
         act_values = self.model.predict(state)
         return np.argmax(act_values[0])
 
