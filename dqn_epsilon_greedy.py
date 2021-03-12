@@ -58,6 +58,8 @@ class DQNEpsilonGreedy:
         targets_full[[ind], [actions]] = targets
 
         self.model.fit(states, targets_full, epochs=1, verbose=0)
+        if self.epsilon > self.epsilon_min:
+            self.epsilon *= self.epsilon_decay
 
     def solve_env(self, env):
         rewards = []
