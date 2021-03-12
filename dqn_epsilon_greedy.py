@@ -18,6 +18,9 @@ class DQNEpsilonGreedy:
         self.batch_size = 64
         self.lr = 0.0005
         self.replay_memory = deque(maxlen=1000000)
+        self.epsilon = 1.0
+        self.epsilon_min = .01
+        self.epsilon_decay = .996
         self.model = self.build_model()
 
     def build_model(self):
@@ -51,7 +54,7 @@ class DQNEpsilonGreedy:
         states = np.squeeze(states)
         next_states = np.squeeze(next_states)
 
-        targets = rewards + self.gamma*(np.amax(self.model.predict_on_batch(next_states), axis=1))*(1-dones)
+        targets = rewards + self.gamma * (np.amax(self.model.predict_on_batch(next_states), axis=1)) * (1 - dones)
         targets_full = self.model.predict_on_batch(states)
 
         ind = np.array([i for i in range(self.batch_size)])
