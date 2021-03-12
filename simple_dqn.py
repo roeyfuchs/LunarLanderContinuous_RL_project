@@ -1,27 +1,18 @@
-import gym
 import random
 from keras import Sequential
 from collections import deque
 from keras.layers import Dense
 from keras.optimizers import Adam
-import matplotlib.pyplot as plt
 from keras.activations import relu, linear
-
 import numpy as np
-env = gym.make("LunarLanderContinuous-v2")
-env.seed(0)
-np.random.seed(0)
-
-
-main_engine_values = [0, 0.5, 1]
-sec_engine_values = [-1, -0.75, 0, 0.75, 1]
-discrete_actions = [(x, y) for x in main_engine_values for y in sec_engine_values]
+import utils
 
 
 class SimpleDQN:
+    """ Implementation of deep q learning algorithm with replay memory"""
 
-    def __init__(self, action_space, state_space):
-        self.action_space = action_space
+    def __init__(self, state_space):
+        self.action_space = len(utils.discrete_actions)
         self.state_space = state_space
         self.gamma = .99
         self.batch_size = 64
@@ -37,7 +28,7 @@ class SimpleDQN:
         model.compile(loss='mse', optimizer=Adam(lr=self.lr))
         return model
 
-    def remember(self, state, action, reward, next_state, done):
+    def save_state(self, state, action, reward, next_state, done):
         self.replay_memory.append((state, action, reward, next_state, done))
 
     def select_action(self, state):
@@ -70,40 +61,31 @@ class SimpleDQN:
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
+    def solve_env(self, env):
+        rewards = []
+        for episode in range(utils.episodes):
+            state = env.reset()
+            state = np.reshape(state, (1, 8))
+            score = 0
+            max_steps = 3000
+            for _ in range(max_steps):
+                action = self.select_action(state)
+                next_state, reward, done, _ = env.step(utils.discrete_actions[action])
+                score += reward
+                next_state = np.reshape(next_state, (1, 8))
+                self.save_state(state, action, reward, next_state, done)
+                state = next_state
+                self.replay()
+                if done:
+                    print("episode: {}/{}, score: {}".format(episode, utils.episodes, score))
+                    break
+            rewards.append(score)
+            print(self.replay_memory)
 
-def train_dqn(episode):
-    rewards = []
-    agent = DQN(len(discrete_actions), env.observation_space.shape[0])
-    for e in range(episode):
-        state = env.reset()
-        state = np.reshape(state, (1, 8))
-        score = 0
-        max_steps = 3000
-        for _ in range(max_steps):
-            action = agent.select_action(state)
-            next_state, reward, done, _ = env.step(discrete_actions[action])
-            score += reward
-            next_state = np.reshape(next_state, (1, 8))
-            agent.remember(state, action, reward, next_state, done)
-            state = next_state
-            agent.replay()
-            if done:
-                print("episode: {}/{}, score: {}".format(e, episode, score))
+            # Average score of last 100 episode
+            is_solved = np.mean(rewards[-100:])
+            if is_solved > 200:
+                print('\n Task Completed! \n')
                 break
-        rewards.append(score)
-        print(self.replay_memory)
-
-        # Average score of last 100 episode
-        is_solved = np.mean(rewards[-100:])
-        if is_solved > 200:
-            print('\n Task Completed! \n')
-            break
-        print("Average over last 100 episode: {0:.2f} \n".format(is_solved))
-    return rewards
-
-
-if __name__ == '__main__':
-    episodes = 800
-    rewards = train_dqn(episodes)
-    plt.plot([i+1 for i in range(0, len(rewards), 2)], rewards[::2])
-    plt.show()
+            print("Average over last 100 episode: {0:.2f} \n".format(is_solved))
+        return rewards
