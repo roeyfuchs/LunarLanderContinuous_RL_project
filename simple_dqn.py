@@ -32,8 +32,6 @@ class SimpleDQN:
         self.replay_memory.append((state, action, reward, next_state, done))
 
     def select_action(self, state):
-        if np.random.rand() <= self.epsilon:
-            return random.randrange(self.action_space)
         act_values = self.model.predict(state)
         return np.argmax(act_values[0])
 
@@ -58,8 +56,6 @@ class SimpleDQN:
         targets_full[[ind], [actions]] = targets
 
         self.model.fit(states, targets_full, epochs=1, verbose=0)
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
 
     def solve_env(self, env):
         rewards = []
@@ -80,7 +76,6 @@ class SimpleDQN:
                     print("episode: {}/{}, score: {}".format(episode, utils.episodes, score))
                     break
             rewards.append(score)
-            print(self.replay_memory)
 
             # Average score of last 100 episode
             is_solved = np.mean(rewards[-100:])
