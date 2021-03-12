@@ -23,7 +23,7 @@ main_engine_values = [
     1,
 ]
 main_engine_values.sort()
-sec_engine_values = [0, -0.6, 0.6, 1, -1]
+sec_engine_values = [0, -0.75, 0.75, 1, -1]
 sec_engine_values.sort()
 discrete_actions = [(x, y) for x in main_engine_values for y in sec_engine_values]
 action_index = {discrete_actions[x]: x for x in range(len(discrete_actions))}
@@ -100,8 +100,8 @@ class Agent(object):
         model.add(Dense(64))
         model.add(Activation("relu"))
         model.add(Dense(self.output_size))
-        model.add(Activation("softmax"))
-        m_opt = Adam(lr=0.00025, decay=0.0)
+        model.add(Activation("linear"))
+        m_opt = Adam(lr=0.001, decay=0.0)
         model.compile(optimizer=m_opt, loss="mse")
         model.summary()
         return model
@@ -198,7 +198,6 @@ class Solve_Lunar_Lander(object):
             verbose=self.verbose,
             win=100,
         )
-        MAX_timesteps = 600
 
         for i in range(self.num_episodes):
             m_cur_state = env.reset()
@@ -229,10 +228,6 @@ class Solve_Lunar_Lander(object):
                     self.agent.copy_action_to_target(self.num_steps)
                 # print(t, reward, next_state)
                 m_cur_state = next_state
-                if t == MAX_timesteps:
-                    reward = -100
-                    self.total_reward += reward
-                    done = True
                 if done:
                     print(
                         "Episode {} finished after {} timesteps with reward {} last reward {}".format(
