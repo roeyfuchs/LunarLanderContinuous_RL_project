@@ -9,7 +9,7 @@ import utils
 import random
 
 
-class DQNEpsilonGreedy:
+class DQNPrioritizedExperience:
     """ Implementation of deep q learning algorithm with prioritized replay memory and epsilon greedy"""
 
     def __init__(self, state_space):
@@ -82,10 +82,14 @@ class DQNEpsilonGreedy:
                 score += reward
                 next_state = np.reshape(next_state, (1, 8))
 
+                target = reward + self.gamma * (np.amax(self.model.predict_on_batch(next_state), axis=1)) * (1 - done)
+                print(target)
+                prediction = self.model.predict_on_batch(state)
+                print(prediction)
+                loss = -1*((target - prediction)**2 + self.epsilon_loss)
+                print(loss)
 
-
-
-                self.save_state(state, action, reward, next_state, done)
+                self.save_state(loss, state, action, reward, next_state, done)
                 state = next_state
                 self.replay()
                 if done:
