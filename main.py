@@ -1,4 +1,5 @@
 from simple_dqn import SimpleDQN
+from queue import PriorityQueue
 from dqn_prioritized_experience import DQNPrioritizedExperience
 import gym
 import os

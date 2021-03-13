@@ -3,6 +3,7 @@ from queue import PriorityQueue
 from keras.layers import Dense
 from keras.optimizers import Adam
 from keras.activations import relu, linear
+from itertools import count
 import numpy as np
 import utils
 import random
@@ -23,6 +24,7 @@ class DQNPrioritizedExperience:
         self.epsilon_decay = .996
         self.epsilon_loss = -0.0001
         self.model = self.build_model()
+        self.tie_breaker = count()
 
     def build_model(self):
         model = Sequential()
@@ -32,8 +34,9 @@ class DQNPrioritizedExperience:
         model.compile(loss='mse', optimizer=Adam(lr=self.lr))
         return model
 
-    def save_state(self, loss, state, action, reward, next_state, done):
-        self.replay_memory.put((loss, state, action, reward, next_state, done))
+    def save_state(self, loss, reward, tie_breaker, state, action, next_state, done):
+        self.replay_memory.put((loss, reward, tie_breaker, state, action, next_state, done))
+        next(self.tie_breaker)
 
     def select_action(self, state):
         if np.random.rand() <= self.epsilon:
@@ -49,11 +52,11 @@ class DQNPrioritizedExperience:
         for i in range(self.batch_size):
             minibatch.append(self.replay_memory.get())
 
-        states = np.array([i[1] for i in minibatch])
-        actions = np.array([i[2] for i in minibatch])
-        rewards = np.array([i[3] for i in minibatch])
-        next_states = np.array([i[4] for i in minibatch])
-        dones = np.array([i[5] for i in minibatch])
+        states = np.array([i[3] for i in minibatch])
+        actions = np.array([i[4] for i in minibatch])
+        rewards = np.array([i[1] for i in minibatch])
+        next_states = np.array([i[5] for i in minibatch])
+        dones = np.array([i[6] for i in minibatch])
 
         states = np.squeeze(states)
         next_states = np.squeeze(next_states)
@@ -85,7 +88,7 @@ class DQNPrioritizedExperience:
                 prediction = np.amax(self.model.predict_on_batch(state), axis=1)
                 loss = -1*((target - prediction)**2 + self.epsilon_loss)
 
-                self.save_state(loss, state, action, reward, next_state, done)
+                self.save_state(loss, reward, self.tie_breaker, state, action, next_state, done)
                 state = next_state
                 self.replay()
                 if done:
