@@ -14,6 +14,10 @@ os.makedirs(
 )  # make sure that we have a directory to save
 FILE_SAVEING_TYPE = "png"
 
+"""
+we based on the discrete code describe in: 
+https://github.com/shivaverma/OpenAIGym/blob/master/lunar-lander/discrete/lunar_lander.py
+"""
 
 if __name__ == '__main__':
     env = gym.make("LunarLanderContinuous-v2")
