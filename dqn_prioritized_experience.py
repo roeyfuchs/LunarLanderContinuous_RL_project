@@ -33,7 +33,7 @@ class DQNPrioritizedExperience:
         return model
 
     def save_state(self, loss, state, action, reward, next_state, done):
-        self.replay_memory.append((loss, state, action, reward, next_state, done))
+        self.replay_memory.put((loss, state, action, reward, next_state, done))
 
     def select_action(self, state):
         if np.random.rand() <= self.epsilon:
@@ -42,7 +42,7 @@ class DQNPrioritizedExperience:
         return np.argmax(act_values[0])
 
     def replay(self):
-        if len(self.replay_memory) < self.batch_size:
+        if self.replay_memory.qsize() < self.batch_size:
             return
 
         minibatch = []
@@ -82,11 +82,8 @@ class DQNPrioritizedExperience:
                 next_state = np.reshape(next_state, (1, 8))
 
                 target = reward + self.gamma * (np.amax(self.model.predict_on_batch(next_state), axis=1)) * (1 - done)
-                print(target)
-                prediction = self.model.predict_on_batch(state)
-                print(prediction)
+                prediction = np.amax(self.model.predict_on_batch(state), axis=1)
                 loss = -1*((target - prediction)**2 + self.epsilon_loss)
-                print(loss)
 
                 self.save_state(loss, state, action, reward, next_state, done)
                 state = next_state

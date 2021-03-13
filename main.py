@@ -1,4 +1,5 @@
 from simple_dqn import SimpleDQN
+from dqn_prioritized_experience import DQNPrioritizedExperience
 import gym
 import os
 import time
@@ -18,7 +19,7 @@ if __name__ == '__main__':
     env.seed(0)
     np.random.seed(0)
 
-    agent = SimpleDQN(env.observation_space.shape[0])
+    agent = DQNPrioritizedExperience(env.observation_space.shape[0])
     rewards = agent.solve_env(env)
 
     filename = time.strftime("%H-%M-%S", time.localtime())
