@@ -1,5 +1,4 @@
 from keras import Sequential
-from collections import deque
 from queue import PriorityQueue
 from keras.layers import Dense
 from keras.optimizers import Adam
