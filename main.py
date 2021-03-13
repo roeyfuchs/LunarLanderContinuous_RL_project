@@ -1,7 +1,8 @@
 from simple_dqn import SimpleDQN
 import gym
 import numpy as np
-import matplotlib as plt
+import matplotlib.pyplot as plt
+
 
 if __name__ == '__main__':
     env = gym.make("LunarLanderContinuous-v2")
