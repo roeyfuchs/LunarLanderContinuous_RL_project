@@ -82,7 +82,6 @@ class DQNTargetNetwork:
                 self.save_state(state, action, reward, next_state, done)
                 state = next_state
                 if update_target_model == 0:
-                    print("yay")
                     update_target_model = utils.updateTargetNetwork
                     weights = self.network.get_weights()
                     self.target_network.set_weights(weights)
