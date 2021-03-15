@@ -2,6 +2,7 @@ from simple_dqn import SimpleDQN
 from queue import PriorityQueue
 from dqn_target_network import DQNTargetNetwork
 from dqn_prioritized_experience import DQNPrioritizedExperience
+from ddqn import DDQN
 import gym
 import os
 import time
@@ -25,7 +26,7 @@ if __name__ == '__main__':
     env.seed(0)
     np.random.seed(0)
 
-    agent = DQNTargetNetwork(env.observation_space.shape[0])
+    agent = DDQN(env.observation_space.shape[0])
     rewards = agent.solve_env(env)
 
     filename = time.strftime("%H-%M-%S", time.localtime())
