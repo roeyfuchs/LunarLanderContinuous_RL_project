@@ -36,3 +36,5 @@ if __name__ == '__main__':
     plt.plot([i + 1 for i in range(0, len(rewards), 2)], rewards[::2])
     plt.savefig(".".join([file_path, FILE_SAVEING_TYPE]))
     plt.show()
+
+    print("yuv")
