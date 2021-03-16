@@ -1,4 +1,3 @@
-import os
 import random
 
 import numpy as np
@@ -37,21 +36,14 @@ default_gamma = 0.99
 epsilon = [0.3, 0.2, 0.1, 0.05, 0.01, 0]  # for epsilon-greedy
 epsilon_bins = [0, 150, 300, 500, 1000, 1250, 3000]
 
-BASE_PATH_Q_SAVING = os.path.join("SARSA", "Q")
-BASE_PATH_REWARD = os.path.join("SARSA", "reward")
-os.makedirs(BASE_PATH_Q_SAVING, exist_ok=True)
-os.makedirs(BASE_PATH_REWARD, exist_ok=True)  # make sure we have directoris to save
-
 
 class SARSA:
     def __init__(
         self,
+        verbose,
         alpha=default_alpha,
         gamma=default_gamma,
-        save=False,
-        load=None,
         render=True,
-        verbose=True,
     ):
         array_shape = [
             len(x_discrete),
@@ -63,15 +55,10 @@ class SARSA:
             len(left_leg),
             len(right_leg),
         ]
-        print(array_shape)
         array_shape.extend([len(discrete_actions)])  # |S| * |A|
-        if load:
-            self.Q = np.load(load)
-        else:
-            self.Q = np.zeros(array_shape)
+        self.Q = np.zeros(array_shape)
         self.alpha = alpha
         self.gamma = gamma
-        self.save = save
         self.render = render
         self.verbose = verbose
 
@@ -129,12 +116,10 @@ class SARSA:
         total_episodes = 100000
         reward_array = []
         for episode in range(total_episodes):
-            if self.verbose:
-                print(f"episode #{episode}")
+            self.versobe(f"episode #{episode}")
             episode_reward = 0
             state1 = env.reset()
             action1 = self.get_action(state1, episode)
-
             done = False
             while not done:
                 if self.render:
@@ -146,12 +131,14 @@ class SARSA:
                 update(state1, state2, reward, action1, action2, done)
                 state1 = state2
                 action1 = action2
-            if self.verbose:
-                print(episode_reward)
+            self.verbose(
+                "episode: {}/{}, score: {}".format(
+                    episode, total_episodes, episode_reward
+                )
+            )
             reward_array.append(episode_reward)
-        if self.verbose:
-            print(f"Avg. reawrd: {np.mean(reward_array)}")
-        if self.save:
-            file_name = "-".join([str(self.alpha), str(self.gamma)])
-            np.save(os.path.join(BASE_PATH_Q_SAVING, file_name), self.Q)
-            np.save(os.path.join(BASE_PATH_REWARD, file_name), reward_array)
+            is_solved = np.mean(reward_array[-100:])
+            if is_solved > 200:
+                self.verbose("Task Completed!")
+                break
+        return reward_array
