@@ -11,14 +11,16 @@ import random
 class SimpleDQN:
     """ Implementation of deep q learning algorithm with replay memory"""
 
-    def __init__(self, state_space):
+    def __init__(self, verbose, render):
         self.action_space = len(utils.discrete_actions)
-        self.state_space = state_space
+        self.state_space = utils.state_space
         self.gamma = .99
         self.batch_size = 64
         self.lr = 0.0005
         self.replay_memory = deque(maxlen=1000000)
         self.model = self.build_model()
+        self.verbose = verbose
+        self.render = render
 
     def build_model(self):
         model = Sequential()

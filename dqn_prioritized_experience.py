@@ -12,9 +12,9 @@ import random
 class DQNPrioritizedExperience:
     """ Implementation of deep q learning algorithm with prioritized replay memory and epsilon greedy"""
 
-    def __init__(self, state_space):
+    def __init__(self, verbose, render):
         self.action_space = len(utils.discrete_actions)
-        self.state_space = state_space
+        self.state_space = utils.state_space
         self.gamma = .99
         self.batch_size = 64
         self.lr = 0.0005
@@ -25,6 +25,8 @@ class DQNPrioritizedExperience:
         self.epsilon_loss = -0.0001
         self.model = self.build_model()
         self.tie_breaker = count()
+        self.verbose = verbose
+        self.render = render
 
     def build_model(self):
         model = Sequential()

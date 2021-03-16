@@ -38,13 +38,7 @@ epsilon_bins = [0, 150, 300, 500, 1000, 1250, 3000]
 
 
 class SARSA:
-    def __init__(
-        self,
-        verbose,
-        alpha=default_alpha,
-        gamma=default_gamma,
-        render=True,
-    ):
+    def __init__(self, verbose, render):
         array_shape = [
             len(x_discrete),
             len(y_discrete),
@@ -57,8 +51,8 @@ class SARSA:
         ]
         array_shape.extend([len(discrete_actions)])  # |S| * |A|
         self.Q = np.zeros(array_shape)
-        self.alpha = alpha
-        self.gamma = gamma
+        self.alpha = default_alpha
+        self.gamma = default_gamma
         self.render = render
         self.verbose = verbose
 
@@ -89,7 +83,7 @@ class SARSA:
             new_obs.append(np.argmin(i))
         return new_obs
 
-    def play(self, env):
+    def solve_env(self, env):
         def update(state, state2, reward, action, action2, done):
             """ by example https://www.geeksforgeeks.org/sarsa-reinforcement-learning/ """
 
@@ -116,7 +110,6 @@ class SARSA:
         total_episodes = 100000
         reward_array = []
         for episode in range(total_episodes):
-            self.versobe(f"episode #{episode}")
             episode_reward = 0
             state1 = env.reset()
             action1 = self.get_action(state1, episode)
