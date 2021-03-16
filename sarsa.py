@@ -3,7 +3,7 @@ import random
 
 import numpy as np
 
-from plot_creator import Plot
+from utils import discrete_actions, main_engine_values, sec_engine_values
 
 # discrete values for states
 x_discrete = np.linspace(-0.2, 0.2, 9)
@@ -30,9 +30,6 @@ values_table = np.array(
 
 
 # discrete values for action
-main_engine_values = [0, 0.5, 1]
-sec_engine_values = [0, -1, -0.75, 0.75, 1]
-discrete_actions = [(x, y) for x in main_engine_values for y in sec_engine_values]
 action_index = {discrete_actions[x]: x for x in range(len(discrete_actions))}
 
 default_alpha = 0.3
@@ -125,17 +122,12 @@ class SARSA:
             target = self.Q[q2_indx]
             if done:
                 target = 0
-            self.Q[q1_indx] = self.Q[q1_indx] + self.alpha * (reward + self.gamma * target - predict)
+            self.Q[q1_indx] = self.Q[q1_indx] + self.alpha * (
+                reward + self.gamma * target - predict
+            )
 
         total_episodes = 100000
         reward_array = []
-        plot = Plot(
-            f"SARSA, alpha = {self.alpha}, gamma = {self.gamma}",
-            "episode #",
-            "rewards",
-            verbose=self.verbose,
-            win=100,
-        )
         for episode in range(total_episodes):
             if self.verbose:
                 print(f"episode #{episode}")
@@ -154,7 +146,6 @@ class SARSA:
                 update(state1, state2, reward, action1, action2, done)
                 state1 = state2
                 action1 = action2
-            plot.add_point(episode, episode_reward)
             if self.verbose:
                 print(episode_reward)
             reward_array.append(episode_reward)
@@ -162,6 +153,5 @@ class SARSA:
             print(f"Avg. reawrd: {np.mean(reward_array)}")
         if self.save:
             file_name = "-".join([str(self.alpha), str(self.gamma)])
-            plot.save(file_name)
             np.save(os.path.join(BASE_PATH_Q_SAVING, file_name), self.Q)
             np.save(os.path.join(BASE_PATH_REWARD, file_name), reward_array)
