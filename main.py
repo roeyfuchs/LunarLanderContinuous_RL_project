@@ -15,6 +15,7 @@ from dqn_target_network import DQNTargetNetwork
 from sarsa import SARSA
 from simple_dqn import SimpleDQN
 from uncertainty_env import uncertainty_env
+import utils
 
 BASE_SAVING_PATH = "graphs"
 os.makedirs(
@@ -22,10 +23,6 @@ os.makedirs(
 )  # make sure that we have a directory to save
 FILE_SAVEING_TYPE = "png"
 
-"""
-we based on the discrete code describe in: 
-https://github.com/shivaverma/OpenAIGym/blob/master/lunar-lander/discrete/lunar_lander.py
-"""
 
 alogs_dict = {
     "sarsa": SARSA,
@@ -34,25 +31,8 @@ alogs_dict = {
     "dqn_p": DQNPrioritizedExperience,
     "dqn_target": DQNTargetNetwork,
 }
-output = sys.stdout
 
-
-def set_verbose(v):
-    global output
-    if v:
-        output = sys.stdout
-    else:
-        output = open(os.devnull, "w")
-
-
-def printout(str):
-    global output
-    print(str, file=output)
-
-
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser()
+def update_parser_options(parser):
     parser.add_argument(
         "-v",
         action="store_true",
@@ -65,12 +45,19 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-n",
-        action="store_false",
+        action="store_true",
+        default=False,
         help="Noise. if set will add noise to the environment",
     )
     parser.add_argument(
         "agent", choices=[i for i in alogs_dict], help="which agent to use"
     )
+
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    update_parser_options(parser)
     args = parser.parse_args()
 
     if args.n:
@@ -78,13 +65,13 @@ if __name__ == "__main__":
     else:
         env = gym.make("LunarLanderContinuous-v2")
 
-    set_verbose(args.v)
+    utils.set_verbose(args.v)
     print(alogs_dict[args.agent])
     print(args)
 
     env.seed(0)
     np.random.seed(0)
-    agent = alogs_dict[args.agent](printout, args.render)
+    agent = alogs_dict[args.agent](utils.printout, args.r)
     rewards = agent.solve_env(env)
 
     filename = time.strftime("%H-%M-%S", time.localtime())
