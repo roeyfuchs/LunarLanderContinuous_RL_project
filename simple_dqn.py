@@ -69,20 +69,22 @@ class SimpleDQN:
             for _ in range(max_steps):
                 action = self.select_action(state)
                 next_state, reward, done, _ = env.step(utils.discrete_actions[action])
+                if self.render:
+                    env.render()
                 score += reward
                 next_state = np.reshape(next_state, (1, 8))
                 self.save_state(state, action, reward, next_state, done)
                 state = next_state
                 self.replay()
                 if done:
-                    print("episode: {}/{}, score: {}".format(episode, utils.episodes, score))
+                    self.verbose("episode: {}/{}, score: {}".format(episode, utils.episodes, score))
                     break
             rewards.append(score)
 
             # Average score of last 100 episode
             is_solved = np.mean(rewards[-100:])
             if is_solved > 200:
-                print('\n Task Completed! \n')
+                self.verbose("Task Completed!")
                 break
-            print("Average over last 100 episode: {0:.2f} \n".format(is_solved))
+            self.verbose("Average over last 100 episode: {0:.2f}".format(is_solved))
         return rewards
