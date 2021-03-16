@@ -8,6 +8,7 @@ import gym
 import matplotlib.pyplot as plt
 import numpy as np
 
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # hide debug msgs
 from ddqn import DDQN
 from dqn_prioritized_experience import DQNPrioritizedExperience
 from dqn_target_network import DQNTargetNetwork
