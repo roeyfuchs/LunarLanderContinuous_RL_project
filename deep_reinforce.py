@@ -1,24 +1,48 @@
+import os
+
 import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
+from tensorflow.keras.layers.experimental.preprocessing import Normalization
+
+from plot_creator import Plot
 
 # discrete values for action
-main_engine_values = [0, 0.1, 0.9, 1]
-sec_engine_values = [0, -1, -0.9, 0.9, 1]
+main_engine_values = [
+    0,
+    1,
+]
+main_engine_values.sort()
+sec_engine_values = [0, 1, -1]
+sec_engine_values.sort()
 discrete_actions = [(x, y) for x in main_engine_values for y in sec_engine_values]
 action_index = {discrete_actions[x]: x for x in range(len(discrete_actions))}
 
 
+BASE_PATH_MODEL_SAVING = os.path.join("reinforce", "model")
+BASE_PATH_REWARD = os.path.join("reinforce", "reward")
+os.makedirs(BASE_PATH_MODEL_SAVING, exist_ok=True)
+os.makedirs(BASE_PATH_REWARD, exist_ok=True)  # make sure we have directoris to save
+
 # from https://medium.com/swlh/policy-gradient-reinforcement-learning-with-keras-57ca6ed32555
 class reinforce:
-    def __init__(self, env):
+    def __init__(
+        self,
+        env,
+        render=True,
+        save=False,
+        alpha=0.35,
+        gamma=0.99,
+        lr=0.001,
+        verbose=True,
+        load=None,
+    ):
         self.env = env
         self.state_shape = env.observation_space.shape
-        # self.action_shape = env.action_shape.shape
         self.action_shape = len(discrete_actions)
-        self.gamma = 0.99
-        self.alpha = 0.0001
-        self.learning_rate = 0.01
+        self.gamma = gamma
+        self.alpha = alpha
+        self.learning_rate = lr
 
         self.states = []
         self.gradients = []
@@ -26,7 +50,13 @@ class reinforce:
         self.probs = []
         self.discounted_rewards = []
         self.total_reawrds = []
-        self.model = self._create_model()
+        if load:
+            self.model = keras.models.load_model(load)
+        else:
+            self.model = self._create_model()
+        self.verbose = verbose
+        self.render = render
+        self.save = save
 
     def hot_encode_action(self, action):
         action_encoded = np.zeros(self.action_shape, np.float32)
@@ -35,6 +65,7 @@ class reinforce:
 
     def remember(self, state, action, action_prob, reward):
         encoded_action = self.hot_encode_action(action)
+        encoded_action = action
         self.gradients.append(encoded_action - action_prob)
         self.states.append(state)
         self.rewards.append(reward)
@@ -42,9 +73,8 @@ class reinforce:
 
     def _create_model(self):
         model = keras.Sequential()
-        model.add(layers.Dense(24, input_shape=self.state_shape, activation="relu"))
-        model.add(layers.Dense(12, activation="relu"))
-
+        model.add(layers.Dense(128, input_shape=self.state_shape, activation="relu"))
+        model.add(layers.Dense(64, activation="relu"))
         model.add(layers.Dense(self.action_shape, activation="softmax"))
         opt = keras.optimizers.Adam(learning_rate=self.learning_rate)
         model.compile(loss="categorical_crossentropy", optimizer=opt)
@@ -57,7 +87,6 @@ class reinforce:
         action_probability_distribution = self.model.predict(state).flatten()
 
         action_probability_distribution /= np.sum(action_probability_distribution)
-
         action = np.random.choice(
             self.action_shape, 1, p=action_probability_distribution
         )[0]
@@ -97,10 +126,17 @@ class reinforce:
 
         return history
 
-    def train(self, episodes, rollout_n=1, render_n=50):
+    def train(self, episodes, rollout_n=1):
         env = self.env
         total_rewards = np.zeros(episodes)
 
+        plot = Plot(
+            f"Reinforce, $\\alpha = {self.alpha}$, $\\gamma = {self.gamma}$, learning rate = {self.learning_rate}",
+            "episode #",
+            "rewards",
+            verbose=self.verbose,
+            win=100,
+        )
         for episode in range(episodes):
             state = env.reset()
             done = False
@@ -116,11 +152,21 @@ class reinforce:
 
                 episode_reward += reward
 
-                if episode % render_n == 0:
+                if self.render:
                     env.render()
+
                 if done:
                     if episode % rollout_n == 0:
                         history = self.update_policy()
             total_rewards[episode] = episode_reward
-            print(f"#episode {episode}, reward {episode_reward}")
+            plot.add_point(episode, episode_reward)
+            if self.verbose:
+                print(f"#episode {episode}, reward {episode_reward}")
         self.total_reawrds = total_rewards
+        if self.save:
+            file_name = "-".join(
+                [str(self.alpha), str(self.gamma), str(self.learning_rate)]
+            )
+            plot.save(file_name)
+            self.model.save(os.path.join(BASE_PATH_MODEL_SAVING, file_name))
+            np.save(os.path.join(BASE_PATH_REWARD, file_name), self.total_reawrds)

@@ -31,8 +31,8 @@ values_table = np.array(
 
 
 # discrete values for action
-main_engine_values = [0, 0.1, 0.9, 1]
-sec_engine_values = [0, -1, -0.9, 0.9, 1]
+main_engine_values = [0, 0.5, 1]
+sec_engine_values = [0, -1, -0.75, 0.75, 1]
 discrete_actions = [(x, y) for x in main_engine_values for y in sec_engine_values]
 action_index = {discrete_actions[x]: x for x in range(len(discrete_actions))}
 
@@ -126,9 +126,9 @@ class table_method:
             target = self.Q[q2_indx]
             if done:
                 target = 0
-            self.Q[q1_indx] += self.alpha * (reward + self.gamma * target - predict)
+            self.Q[q1_indx] = self.Q[q1_indx] + self.alpha * (reward + self.gamma * target - predict)
 
-        total_episodes = 50000
+        total_episodes = 100000
         reward_array = []
         plot = Plot(
             f"SARSA, alpha = {self.alpha}, gamma = {self.gamma}",
