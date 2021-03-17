@@ -26,7 +26,7 @@ You can run `pip -r requirements.txt` to install them.
 
 ### How To Run
 Simply run the `main.py` file with the name of the algorithm that you prefer:
-`sarsa`, `simple_dqn`, `dqn_eg` (DQN with epsilon-greedy), `dqn_target` (DQN with target network`, `dqn_p` (DQN with PER), `ddqn` (Double DQN)
+`sarsa`, `simple_dqn`, `dqn_eg` (DQN with epsilon-greedy), `dqn_target` (DQN with target network), `dqn_p` (DQN with PER), `ddqn` (Double DQN)
 
 ### Flags
 Run the program with  `-n` to add noises to the enviroment, `-v` (for verbose) to add information messages during the run and graph in the end, `-r` to render the enviroment during the run.
@@ -38,5 +38,5 @@ For example, to run DDQN, verbose and render, use the following command:
 In any case, you can run `python main.py -h` for the help message.
 
 ## Acknowledgments
-We use code from [https://github.com/shivaverma/OpenAIGym/tree/master/lunar-lander/discrete](this repo) and [https://www.geeksforgeeks.org/sarsa-reinforcement-learning/](this tutorial) as a skelaton for our code.
+We use code from [this repo](https://github.com/shivaverma/OpenAIGym/tree/master/lunar-lander/discrete) and [this tutorial](https://www.geeksforgeeks.org/sarsa-reinforcement-learning/) as a skelaton for our code.
 
