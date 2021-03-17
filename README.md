@@ -4,7 +4,7 @@ This repo submitted as final project for Reinforcement Learning course (896873),
 We have implemented the following algorithms/methods:
 1. SARSA.
 2. Simple DQN.
-3. DQN with \epsilon-greedy.
+3. DQN with epsilon-greedy.
 4. DQN with PER (prioritized experience replay).
 5. DQN with target network.
 6. Double DQN.
