@@ -1,6 +1,5 @@
 gym
 gym[box2d]
-#tensorflow
 numpy
 matplotlib
 tensorflow
