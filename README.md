@@ -16,10 +16,10 @@ In addtion, its possible to run the environment with noises. The enviroment will
 Please use python 3.6.
 We have use basic python libraries excluding gym environment:
 
--NumPy
--TensorFlow
--Keras
--Matplotlib
+- NumPy
+- TensorFlow
+- Keras
+- Matplotlib
 
 You can run `pip -r requirements.txt` to install them.
 
