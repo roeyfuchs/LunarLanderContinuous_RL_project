@@ -33,7 +33,7 @@ Run the program with  `-n` to add noises to the enviroment, `-v` (for verbose) t
 
 
 For example, to run DDQN, verbose and render, use the following command:
-`python main.py -vr ddqn.
+`python main.py -vr ddqn`.
 
 In any case, you can run `python main.py -h` for the help message.
 
